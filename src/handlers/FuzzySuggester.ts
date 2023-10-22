@@ -21,11 +21,23 @@ export class FuzzySuggester extends FuzzySuggestModal<TFile> {
     }
 
     getItems(): TFile[] {
-        if (!this.plugin.settings.templates_folder) {
+        let templates_folder = this.plugin.settings.templates_folder;
+        if (this.plugin.settings.seperate_templates) {
+            switch (this.open_mode) {
+                case OpenMode.InsertTemplate:
+                    templates_folder = this.plugin.settings.insert_templates_folder;
+                    break;
+                case OpenMode.CreateNoteTemplate:
+                    templates_folder = this.plugin.settings.note_templates_folder;
+                    break;
+            }
+        }
+        if (!templates_folder) {
             return app.vault.getMarkdownFiles();
         }
+
         const files = errorWrapperSync(
-            () => get_tfiles_from_folder(this.plugin.settings.templates_folder),
+            () => get_tfiles_from_folder(templates_folder),
             `Couldn't retrieve template files from templates folder ${this.plugin.settings.templates_folder}`
         );
         if (!files) {

@@ -9,6 +9,7 @@ import {
 } from "obsidian";
 import {
     delay,
+    file_in_folder,
     generate_dynamic_command_regex,
     get_active_file,
     resolve_tfile,
@@ -390,11 +391,10 @@ export class Templater {
             return;
         }
 
+        const settings = templater.plugin.settings;
+        
         // Avoids template replacement when syncing template files
-        const template_folder = normalizePath(
-            templater.plugin.settings.templates_folder
-        );
-        if (file.path.includes(template_folder) && template_folder !== "/") {
+        if (file_in_folder(file, settings.templates_folder, settings.note_templates_folder, settings.insert_templates_folder)) {
             return;
         }
 
@@ -402,10 +402,7 @@ export class Templater {
         // Currently, I have to wait for the note extractor plugin to add the file content before replacing
         await delay(300);
 
-        if (
-            file.stat.size == 0 &&
-            templater.plugin.settings.enable_folder_templates
-        ) {
+        if (file.stat.size == 0 && settings.enable_folder_templates) {
             const folder_template_match =
                 templater.get_new_file_template_for_folder(file.parent);
             if (!folder_template_match) {

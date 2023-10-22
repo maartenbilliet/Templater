@@ -15,6 +15,9 @@ export interface FolderTemplate {
 export const DEFAULT_SETTINGS: Settings = {
     command_timeout: 5,
     templates_folder: "",
+    seperate_templates: false,
+    note_templates_folder: "",
+    insert_templates_folder: "",
     templates_pairs: [["", ""]],
     trigger_on_file_creation: false,
     auto_jump_to_cursor: false,
@@ -33,6 +36,9 @@ export const DEFAULT_SETTINGS: Settings = {
 export interface Settings {
     command_timeout: number;
     templates_folder: string;
+    seperate_templates: boolean;
+    note_templates_folder: string;
+    insert_templates_folder: string;
     templates_pairs: Array<[string, string]>;
     trigger_on_file_creation: boolean;
     auto_jump_to_cursor: boolean;
@@ -57,7 +63,7 @@ export class TemplaterSettingTab extends PluginSettingTab {
         this.containerEl.empty();
 
         this.add_general_setting_header();
-        this.add_template_folder_setting();
+        this.add_template_folder_settings();
         this.add_internal_functions_setting();
         this.add_syntax_highlighting_settings();
         this.add_auto_jump_to_cursor();
@@ -77,21 +83,73 @@ export class TemplaterSettingTab extends PluginSettingTab {
         this.containerEl.createEl("h2", { text: "General Settings" });
     }
 
-    add_template_folder_setting(): void {
+    add_template_folder_settings(): void {
+
+        const toggleDesc = document.createDocumentFragment();
+        toggleDesc.append(
+            "Use seperate folders for templates inserted into existing notes and templates used to create new notes."
+        );
         new Setting(this.containerEl)
-            .setName("Template folder location")
-            .setDesc("Files in this folder will be available as templates.")
-            .addSearch((cb) => {
-                new FolderSuggest(cb.inputEl);
-                cb.setPlaceholder("Example: folder1/folder2")
-                    .setValue(this.plugin.settings.templates_folder)
-                    .onChange((new_folder) => {
-                        this.plugin.settings.templates_folder = new_folder;
+            .setName("Seperate template folders")
+            .setDesc(toggleDesc)
+            .addToggle((toggle) => {
+                toggle
+                    .setValue(this.plugin.settings.seperate_templates)
+                    .onChange((seperate_templates) => {
+                        this.plugin.settings.seperate_templates = seperate_templates;
                         this.plugin.save_settings();
+                        // Force refresh
+                        this.display();
                     });
-                // @ts-ignore
-                cb.containerEl.addClass("templater_search");
             });
+
+
+        if (this.plugin.settings.seperate_templates) {
+            new Setting(this.containerEl)
+                .setName("Note template folder location")
+                .setDesc("Files in this folder will be available as note templates.")
+                .addSearch((cb) => {
+                    new FolderSuggest(cb.inputEl);
+                    cb.setPlaceholder("Example: folder1/folder2")
+                        .setValue(this.plugin.settings.note_templates_folder)
+                        .onChange((new_folder) => {
+                            this.plugin.settings.note_templates_folder = new_folder;
+                            this.plugin.save_settings();
+                        });
+                    // @ts-ignore
+                    cb.containerEl.addClass("templater_search");
+                });
+            new Setting(this.containerEl)
+                .setName("Insert template folder location")
+                .setDesc("Files in this folder will be available as insert templates.")
+                .addSearch((cb) => {
+                    new FolderSuggest(cb.inputEl);
+                    cb.setPlaceholder("Example: folder1/folder2")
+                        .setValue(this.plugin.settings.insert_templates_folder)
+                        .onChange((new_folder) => {
+                            this.plugin.settings.insert_templates_folder = new_folder;
+                            this.plugin.save_settings();
+                        });
+                    // @ts-ignore
+                    cb.containerEl.addClass("templater_search");
+                });
+        } else {
+            new Setting(this.containerEl)
+                .setName("Template folder location")
+                .setDesc("Files in this folder will be available as templates.")
+                .addSearch((cb) => {
+                    new FolderSuggest(cb.inputEl);
+                    cb.setPlaceholder("Example: folder1/folder2")
+                        .setValue(this.plugin.settings.templates_folder)
+                        .onChange((new_folder) => {
+                            this.plugin.settings.templates_folder = new_folder;
+                            this.plugin.save_settings();
+                        });
+                    // @ts-ignore
+                    cb.containerEl.addClass("templater_search");
+                });
+        }
+
     }
 
     add_internal_functions_setting(): void {

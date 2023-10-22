@@ -85,3 +85,13 @@ export function arraymove<T>(
 export function get_active_file(app: App) {
     return app.workspace.activeEditor?.file ?? app.workspace.getActiveFile();
 }
+
+export function file_in_folder(file: TFile, ...folders: string[]): boolean {
+    for (let folder of folders) {
+        const normalized_folder = normalizePath(folder);
+        if (normalized_folder !== "/" && file.path.includes(normalized_folder)) {
+            return true;
+        }
+    }
+    return false;
+}
